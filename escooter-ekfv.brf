@@ -2,45 +2,43 @@
 # E-Scooter Profil (Spezial-Profil nach deutscher eKFV)
 # 
 # Eigenschaften:
-# - 100% Legal: Sperrung von reinen Fußwegen & Fußgängerzonen
+# - 100% Legal: Sperrung von reinen Fußwegen & illegalen "Fahrrad frei"-Gehwegen.
 # - Keine Treppen, keine Fähren (hart gesperrt)
-# - Landstraßen-Vermeidung: Bevorzugt Radwege und Nebenstraßen
-# - Strikte Ampel-Vermeidung: Meidet große Kreuzungen mit Mittelinseln
+# - Ausbalanciertes Routing: Meidet nervige Bettelampeln und Monster-Kreuzungen, 
+#   nutzt aber Hauptstraßen flexibel als Brücke, um Dauerwarten zu verhindern.
 # - Zeit-Modell: Exakte Fahrzeitberechnung (Abriegelung bei 22 km/h)
 # =====================================================================
 
 ---context:global   # Folgender Code bezieht sich auf die globale Konfiguration
 
-# Nutze die folgenden Schalter, um das Verhalten zu ändern (1=ja, 0=nein):
-assign   consider_elevation   1   # 0 = Höhenmeter beim Routing ignorieren
+assign   consider_elevation   1   
 assign   allow_steps          0   # KEINE TREPPEN erlauben
 assign   allow_ferries        0   # KEINE FÄHREN erlauben
-assign   ignore_cycleroutes   0   # 1 = Radwege ignorieren (für bessere Höhenberechnung)
-assign   stick_to_cycleroutes 0   # 1 = Strikt nur auf ausgewiesenen Radwegen bleiben
-assign   avoid_unsafe         0   # 1 = Standard-Straßen meiden
-assign   UnpavedCostfactor    25.0 # Strafe für unbefestigte Wege
-assign   PavingUnsureCostfactor 6.0 # Strafe für Wege mit unklarem Belag
+assign   ignore_cycleroutes   0   
+assign   stick_to_cycleroutes 0   
+assign   avoid_unsafe         0   
+assign   UnpavedCostfactor    25.0 
+assign   PavingUnsureCostfactor 6.0 
 
 assign processUnusedTags = true 
 assign ferries_allowed   = false  
 
-# Einstellungen für Abbiegehinweise (Turn instructions)
-assign turnInstructionMode          = 1     # Modus für Abbiegehinweise (1=automatisch)
-assign turnInstructionCatchingRange = 40    # Radius in Metern zur Zusammenfassung
-assign turnInstructionRoundabouts   = true  # false = keine Kreisverkehr-Hinweise
+assign turnInstructionMode          = 1     
+assign turnInstructionCatchingRange = 40    
+assign turnInstructionRoundabouts   = true  
 
 assign   validForBikes        1
 
 # --- E-SCOOTER PHYSIK & EXAKTE FAHRZEIT ---
-assign totalMass  = 77      # Gesamtgewicht in kg (ca. 57kg Fahrer + 20kg Scooter)
+assign totalMass  = 77      # Gesamtgewicht in kg (Fahrer + Scooter)
 assign maxSpeed   = 22      # Maximale Motorunterstützung in km/h
 assign S_V        = 22      # Standard-Reisegeschwindigkeit
 
-# Diese Werte garantieren eine präzise Berechnung der Ankunftszeit in der App.
+# Diese Werte garantieren eine präzise Berechnung der Ankunftszeit.
 # Hinweis: Der in BRouter angezeigte Energieverbrauch ist hierdurch mechanisch 
-# bedingt zu niedrig (zeigt ca. 0.2 kWh statt der realen 0.4 - 0.5 kWh elektrisch an).
-assign C_r        = 0.015   # Rollwiderstand
-assign C_R        = 0.6     # Luftwiderstand
+# bedingt zu niedrig.
+assign C_r        = 0.015   
+assign C_R        = 0.6     
 
 assign downhillcost switch consider_elevation 80 0
 assign downhillcutoff 0.5
@@ -175,12 +173,14 @@ assign costfactor
   add smoothnesspenalty
   add trafficpenalty
 
+  # --- AUTOBAHNEN / SCHNELLSTRASSEN (gesperrt) ---
   switch    highway=motorway|motorway_link|construction|abandoned    10000
   switch    highway=trunk|trunk_link                  10
   
-  switch    highway=primary|primary_link              switch any_cycleroute 1.5 4.0
-  switch    highway=secondary|secondary_link          switch any_cycleroute 1.3 2.5
-  switch    highway=tertiary|tertiary_link            switch isunpaved UnpavedCostfactor 1.6
+  # --- LANDSTRASSEN & BUNDESSTRASSEN (Moderat meiden, erlaubt Umfahrung von Mega-Kreuzungen) ---
+  switch    highway=primary|primary_link              switch any_cycleroute 1.5 2.5
+  switch    highway=secondary|secondary_link          switch any_cycleroute 1.3 1.8
+  switch    highway=tertiary|tertiary_link            switch isunpaved UnpavedCostfactor 1.4
   
   switch    highway=unclassified                      switch isunpaved UnpavedCostfactor 1.1
   switch    highway=residential|living_street         switch isunpaved UnpavedCostfactor 1.1
@@ -200,9 +200,11 @@ assign costfactor
    switch tracktype=grade2 switch ispaved 2.0 switch isunpaved UnpavedCostfactor PavingUnsureCostfactor
    switch and ispaved tracktype=  3.0     UnpavedCostfactor
   
+  # --- GEMEINSAME RAD/FUSSWEGE (Strikte Trennung für E-Scooter) ---
   switch    highway=path
-    switch bicycle=yes|designated 1.1
-        switch ispaved 3.0 UnpavedCostfactor
+    switch bicycle=designated 1.1
+    switch bicycle=yes 10000
+    switch ispaved 5.0 UnpavedCostfactor
   UnpavedCostfactor
 
 assign priorityclassifier =
@@ -240,6 +242,9 @@ assign isgoodforcars = if greater priorityclassifier 6 then true
 
 ---context:node  # Folgender Code bezieht sich auf Knoten-Tags
 
+# Definiert Auto-Ampeln (highway) UND Radweg-Bettelampeln (crossing)
+assign is_traffic_signal = or highway=traffic_signals crossing=traffic_signals
+
 assign defaultaccess
        switch access=
               1 
@@ -270,8 +275,10 @@ assign footaccess
 # Initiale Kosten berechnen (inklusive AMPELN)
 assign initialcost
        add 
-         # 500 = Sehr harte Strafe für Ampeln.
-         switch highway=traffic_signals 500 0   
+         # 800 = Hohe Strafe für Ampeln, aber flexibel genug für sinnvolle Routen.
+         # Umgeht Mega-Kreuzungen und Bettelampeln, erzwingt aber keine endlosen Zickzack-Fahrten.
+         max switch highway=traffic_signals 800 0
+             switch crossing=traffic_signals 800 0   
          switch bikeaccess
                 0
                 switch footaccess
