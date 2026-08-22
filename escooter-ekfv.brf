@@ -173,6 +173,292 @@ assign costfactor
   add smoothnesspenalty
   add trafficpenalty
 
+# =====================================================================
+# E-Scooter Profil (Spezial-Profil nach deutscher eKFV)
+# 
+# Eigenschaften:
+# - 100% Legal: Sperrung von reinen Fußwegen & illegalen "Fahrrad frei"-Gehwegen.
+# - Keine Treppen, keine Fähren (hart gesperrt)
+# - Ausbalanciertes Routing: Meidet nervige Bettelampeln und Monster-Kreuzungen.
+# - Anti-Werksgelände: Harte Sperre für Tore, Schranken und "Anlieger frei".
+# - Zeit-Modell: Exakte Fahrzeitberechnung (Abriegelung bei 22 km/h)
+# =====================================================================
+
+---context:global
+
+assign   consider_elevation   1   
+assign   allow_steps          0   
+assign   allow_ferries        0   
+assign   ignore_cycleroutes   0   
+assign   stick_to_cycleroutes 0   
+assign   avoid_unsafe         0   
+assign   UnpavedCostfactor    25.0 
+assign   PavingUnsureCostfactor 6.0 
+
+assign processUnusedTags = true 
+assign ferries_allowed   = false  
+
+assign turnInstructionMode          = 1     
+assign turnInstructionCatchingRange = 40    
+assign turnInstructionRoundabouts   = true  
+
+assign   validForBikes        1
+
+# --- E-SCOOTER PHYSIK & EXAKTE FAHRZEIT ---
+assign totalMass  = 77      
+assign maxSpeed   = 22      
+assign S_V        = 22      
+
+assign C_r        = 0.015   
+assign C_R        = 0.6     
+
+assign downhillcost switch consider_elevation 80 0
+assign downhillcutoff 0.5
+assign uphillcost 80
+assign uphillcutoff 1.0
+
+---context:way
+
+# --- eKFV (E-Scooter) LOGIK START ---
+assign is_illegal_escooter_path = highway=footway|pedestrian
+# --- eKFV (E-Scooter) LOGIK ENDE ---
+
+assign any_cycleroute or route_bicycle_icn=yes or route_bicycle_ncn=yes or route_bicycle_rcn=yes route_bicycle_lcn=yes
+assign nodeaccessgranted or any_cycleroute lcn=yes
+
+assign ispaved
+  or surface=paved
+  or surface=asphalt
+  or surface=concrete
+     surface=paving_stones
+
+assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobblestone
+
+assign turncost = if junction=roundabout then 0
+                  else 90
+
+assign initialcost switch route=ferry 10000 0
+
+assign bikeaccess =
+       if any_cycleroute then true
+       else if bicycle= then
+       (
+         if vehicle= then
+         (
+           if access= then not or motorroad=yes highway=footway
+           else if access=private|no then false
+           else true
+         )
+         else not vehicle=private|no
+       )
+       else not bicycle=private|no|dismount
+
+assign footaccess =
+       if bikeaccess then true
+       else if bicycle=dismount then true
+       else if foot= then
+       (
+         if access= then not motorroad=yes
+         else if access=private|no then false
+         else true
+       )
+       else not foot=private|no
+
+assign accesspenalty =
+       if bikeaccess then 0
+       else if footaccess then 6
+       else 100000
+
+assign badoneway =
+       if reversedirection=yes then
+         if oneway:bicycle=yes then true
+         else if oneway= then junction=roundabout
+         else oneway=yes|1
+       else oneway=-1
+
+assign onewaypenalty =
+       if ( badoneway ) then
+       (
+         if ( cycleway=opposite|opposite_lane|opposite_track ) then 0
+         else if ( oneway:bicycle=no                         ) then 0
+         else if ( highway=primary|primary_link              ) then 50
+         else if ( highway=secondary|secondary_link          ) then 30
+         else if ( highway=tertiary|tertiary_link            ) then 20
+         else 6.0
+       )
+       else 0.0
+
+assign hascycleway = not
+  and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
+
+assign trafficpenalty0 =
+    if highway=primary|primary_link then
+    (
+      if      estimated_traffic_class=4 then 0.2
+      else if estimated_traffic_class=5 then 0.4
+      else if estimated_traffic_class=6|7 then 0.6
+      else 0
+    )
+    else if highway=secondary|secondary_link then
+    (
+      if      estimated_traffic_class=3 then 0.2
+      else if estimated_traffic_class=4 then 0.4
+      else if estimated_traffic_class=5 then 0.6
+      else if estimated_traffic_class=6|7 then 1
+      else 0
+    )
+    else if highway=tertiary|tertiary_link then
+    (
+      if      estimated_traffic_class=2 then 0.1
+      else if estimated_traffic_class=3 then 0.3
+      else if estimated_traffic_class=4 then 0.5
+      else if estimated_traffic_class=5|6|7 then 1
+      else 0
+    )
+    else 0
+
+assign trafficpenalty =
+  if hascycleway then min 0.3 trafficpenalty0
+  else trafficpenalty0
+
+assign smoothnesspenalty
+  switch smoothness=excellent     1.0
+  switch smoothness=good          1.1
+  switch smoothness=intermediate  1.5
+  switch smoothness=bad           2.5
+  switch smoothness=very_bad      3.5
+  switch smoothness=              1.1 
+  5                                   
+
+# =====================================================================
+# HAUPT-ROUTING-KOSTEN (COSTFACTOR)
+# =====================================================================
+assign costfactor
+
+  switch is_illegal_escooter_path 10000
+
+  switch and highway= not route=ferry  10000
+  switch    highway=proposed|abandoned|construction 10000
+
+  # --- PRIVATGELÄNDE & ANLIEGER FREI (Transit streng vermeiden) ---
+  # Verhindert, dass man nachts durch Industriegebiete oder über Kundenparkplätze geführt wird.
+  switch    or access=destination or access=customers access=permissive 10000
+
+  min 9999
+  add max onewaypenalty accesspenalty
+  add smoothnesspenalty
+  add trafficpenalty
+
+  switch    highway=motorway|motorway_link|construction|abandoned    10000
+  switch    highway=trunk|trunk_link                  10
+  
+  switch    highway=primary|primary_link              switch any_cycleroute 1.5 2.5
+  switch    highway=secondary|secondary_link          switch any_cycleroute 1.3 1.8
+  switch    highway=tertiary|tertiary_link            switch isunpaved UnpavedCostfactor 1.4
+  
+  switch    highway=unclassified                      switch isunpaved UnpavedCostfactor 1.1
+  switch    highway=residential|living_street         switch isunpaved UnpavedCostfactor 1.1
+  switch    highway=service                           switch isunpaved UnpavedCostfactor 1.1
+  
+  switch    highway=pedestrian                        switch ispaved 10 UnpavedCostfactor
+  
+  switch    highway=steps                             10000
+  switch    route=ferry                               10000
+  
+  switch    highway=bridleway                         UnpavedCostfactor
+  switch    highway=cycleway                          switch ispaved 1.0 UnpavedCostfactor
+  switch    highway=footway                           switch ispaved 5.0 UnpavedCostfactor
+  
+  switch    highway=track|road
+   switch tracktype=grade1 switch ispaved 1.1 switch isunpaved UnpavedCostfactor PavingUnsureCostfactor
+   switch tracktype=grade2 switch ispaved 2.0 switch isunpaved UnpavedCostfactor PavingUnsureCostfactor
+   switch and ispaved tracktype=  3.0     UnpavedCostfactor
+  
+  switch    highway=path
+    switch bicycle=designated 1.1
+    switch bicycle=yes 10000
+    switch ispaved 5.0 UnpavedCostfactor
+  UnpavedCostfactor
+
+assign priorityclassifier =
+
+  if      ( highway=motorway                  ) then  30
+  else if ( highway=motorway_link             ) then  29
+  else if ( highway=trunk                     ) then  28
+  else if ( highway=trunk_link                ) then  27
+  else if ( highway=primary                   ) then  26
+  else if ( highway=primary_link              ) then  25
+  else if ( highway=secondary                 ) then  24
+  else if ( highway=secondary_link            ) then  23
+  else if ( highway=tertiary                  ) then  22
+  else if ( highway=tertiary_link             ) then  21
+  else if ( highway=unclassified              ) then  20
+  else if ( highway=residential|living_street ) then  6
+  else if ( highway=service                   ) then  6
+  else if ( highway=cycleway                  ) then  6
+  else if ( bicycle=designated                ) then  6
+  else if ( highway=track                     ) then if tracktype=grade1 then 6 else 4
+  else if ( highway=bridleway|road|path|footway ) then  4
+  else if ( highway=steps                     ) then  2
+  else if ( highway=pedestrian                ) then  2
+  else 0
+
+assign isbadoneway = not equal onewaypenalty 0
+assign isgoodoneway = if reversedirection=yes then oneway=-1
+                      else if oneway= then junction=roundabout else oneway=yes|1
+assign isroundabout = junction=roundabout
+assign islinktype = highway=motorway_link|trunk_link|primary_link|secondary_link|tertiary_link
+assign isgoodforcars = if greater priorityclassifier 6 then true
+                  else if highway=residential|living_street|service then true
+                  else if ( and highway=track tracktype=grade1 ) then true
+                  else false
+
+---context:node
+
+assign is_traffic_signal = or highway=traffic_signals crossing=traffic_signals
+
+assign defaultaccess
+       switch access=
+              1 
+              switch or access=private access=no
+                     0
+                     1
+
+assign bikeaccess
+       or nodeaccessgranted=yes
+          switch bicycle=
+                 switch vehicle=
+                        defaultaccess
+                        switch or vehicle=private vehicle=no
+                               0
+                               1
+                 switch or bicycle=private or bicycle=no bicycle=dismount
+                        0
+                        1
+
+assign footaccess
+       or bicycle=dismount
+          switch foot=
+                 defaultaccess
+                 switch or foot=private foot=no
+                        0
+                        1
+
+# Initiale Kosten berechnen (inklusive AMPELN und TOREN)
+assign initialcost
+       add 
+         # 800 = Hohe Strafe für Ampeln
+         switch is_traffic_signal 800 0   
+       add
+         # 10000 = Extreme Strafe für Tore & Schranken (Verhindert Werksgelände)
+         max switch barrier=gate 10000 0
+             switch barrier=lift_gate 10000 0
+         switch bikeaccess
+                0
+                switch footaccess
+                       300
+                       1000000
+
   # --- AUTOBAHNEN / SCHNELLSTRASSEN (gesperrt) ---
   switch    highway=motorway|motorway_link|construction|abandoned    10000
   switch    highway=trunk|trunk_link                  10
@@ -219,38 +505,7 @@ assign priorityclassifier =
   else if ( highway=secondary_link            ) then  23
   else if ( highway=tertiary                  ) then  22
   else if ( highway=tertiary_link             ) then  21
-  else if ( highway=unclassified              ) then  20
-  else if ( highway=residential|living_street ) then  6
-  else if ( highway=service                   ) then  6
-  else if ( highway=cycleway                  ) then  6
-  else if ( bicycle=designated                ) then  6
-  else if ( highway=track                     ) then if tracktype=grade1 then 6 else 4
-  else if ( highway=bridleway|road|path|footway ) then  4
-  else if ( highway=steps                     ) then  2
-  else if ( highway=pedestrian                ) then  2
-  else 0
-
-assign isbadoneway = not equal onewaypenalty 0
-assign isgoodoneway = if reversedirection=yes then oneway=-1
-                      else if oneway= then junction=roundabout else oneway=yes|1
-assign isroundabout = junction=roundabout
-assign islinktype = highway=motorway_link|trunk_link|primary_link|secondary_link|tertiary_link
-assign isgoodforcars = if greater priorityclassifier 6 then true
-                  else if highway=residential|living_street|service then true
-                  else if ( and highway=track tracktype=grade1 ) then true
-                  else false
-
----context:node  # Folgender Code bezieht sich auf Knoten-Tags
-
-# Definiert Auto-Ampeln (highway) UND Radweg-Bettelampeln (crossing)
-assign is_traffic_signal = or highway=traffic_signals crossing=traffic_signals
-
-assign defaultaccess
-       switch access=
-              1 
-              switch or access=private access=no
-                     0
-                     1
+             1
 
 assign bikeaccess
        or nodeaccessgranted=yes
