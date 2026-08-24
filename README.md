@@ -1,56 +1,61 @@
-# 🛴 BRouter E-Scooter Profil (eKFV-konform)
+# 🛴 BRouter E-Scooter Profil (eKFV-konform & sicherheitsoptimiert)
 
-Ein praxiserprobtes, maßgeschneidertes Routing-Profil für [BRouter](https://brouter.de/) und [bikerouter.de](https://bikerouter.de), das speziell für Elektrokleinstfahrzeuge (E-Scooter) in Deutschland nach den Regeln der eKFV (Elektrokleinstfahrzeuge-Verordnung) entwickelt wurde. 
+Ein praxiserprobtes, maßgeschneidertes Routing-Profil für [BRouter](https://brouter.de/) und [bikerouter.de](https://bikerouter.de), speziell entwickelt für Elektrokleinstfahrzeuge (E-Scooter) in Deutschland nach den Vorgaben der **eKFV** (Elektrokleinstfahrzeuge-Verordnung).
 
-Dieses Profil legt den Fokus auf **Legalität, flüssiges Vorankommen im dichten Stadtverkehr und hochpräzise Fahrzeitberechnungen**. 
+Dieses Profil kombiniert **maximale Verkehrssicherheit, 100%ige Gesetzeskonformität und direkte Streckenführung**.
 
 ---
 
-## 🚀 Features
+## 🚀 Key Features
 
-* **⚖️ 100% Legales Routing (Anti-"Fahrrad frei"):** Reine Fußwege und Fußgängerzonen sind konsequent gesperrt. Das Profil blockiert rigoros geteilte Wege mit dem bloßen Zusatzschild "Radfahrer frei" (`bicycle=yes`), da E-Scooter hier nicht fahren dürfen. Nur echte Radwege (`bicycle=designated`) und legale Straßen werden für das Routing genutzt.
-* **🚦 Balancierte Ampel-Vermeidung:** Ampeln, insbesondere nervige Radweg-Bettelampeln an Mittelinseln (`crossing=traffic_signals`), werden stark bestraft (`cost = 800`). Die Engine umfährt riesige Autobahnauffahrten und Mega-Kreuzungen, bleibt aber flexibel genug, um bei fehlenden Alternativen keine unlogischen Zickzack-Umwege zu generieren.
-* **⏱️ Präzise Ankunftszeit:** Das Physik-Modell ist exakt auf eine maximale Motorunterstützung von 22 km/h abgestimmt. Die Fahrzeiten werden auf Basis des tatsächlichen Gesamtgewichts (Standard: 77 kg) und des realistischen Bremsverhaltens berechnet – perfekt verlässlich für die Live-Navigation.
-* **🏞️ Dynamische Streckenwahl:** Bundes- und Landstraßen werden moderat bestraft. Das Routing bevorzugt leere Nebenstraßen und Wohngebiete, scheut aber nicht davor zurück, Hauptverkehrsadern als kurze "Brücke" zu nutzen, wenn man sich dadurch ewige Ampel-Wartezeiten erspart.
-* **🚫 Keine Hindernisse:** Treppen und Fähren sind im Routing hart gesperrt (Umtragen entfällt komplett).
+* **🛡️ Landstraßen- & Tempolimit-Schutz (Neu):** 
+  Bundes- (`primary`), Land- (`secondary`) und Kreisstraßen (`tertiary`) ohne baulichen Radweg oder Schutzstreifen werden massiv abgewertet und umfahren. Du wirst nicht mehr auf unübersichtliche 70- bis 100-km/h-Straßen im Mischverkehr geleitet. Besitzt die Straße hingegen einen separaten Radweg (`hascycleway`), nutzt BRouter sie sehr gerne für schnelles Vorankommen.
+* **⚖️ 100% eKFV-konform (Anti-"Radfahrer frei"):** 
+  Reine Fußwege und Fußgängerzonen sind gesperrt. Gehwege mit dem bloßen Zusatzschild *"Radfahrer frei"* (`bicycle=yes`) werden strikt blockiert, da E-Scooter diese rechtlich nicht befahren dürfen. Geroutet wird ausschließlich über echte Radwege (`bicycle=designated`), Straßen und freigegebene Wege.
+* **🚧 Schutz vor verschlossenen Toren & Werksgeländen:** 
+  Wege über Kundenparkplätze sowie physische Tore (`barrier=gate`) und Schranken (`barrier=lift_gate`) sind hart gesperrt. Das verhindert, dass man abends oder am Wochenende vor verschlossenen Toren auf Betriebsgeländen strandet.
+* **🚦 Ausbalancierte Ampel-Logik:** 
+  Ampeln und Bettelampeln werden moderat bestraft. Große Kreuzungen werden sinnvoll umfahren, ohne dass die Navigation in absurde Zickzack-Fahrten durch verwinkelte Wohngebiete verfällt.
+* **⏱️ Exakte Fahrzeitberechnung (ETA):** 
+  Das Physikmodell ist exakt auf die gesetzliche Maximalunterstützung von **22 km/h** und das reale Gesamtgewicht abgestimmt. Die errechneten Ankunftszeiten stimmen auf die Minute genau.
+* **🚫 Barrierefrei:** 
+  Treppen (`steps`) und Fähren (`ferry`) sind vollständig ausgeschlossen – kein lästiges Tragen des Scooters.
 
 ---
 
 ## 📥 Installation & Nutzung
 
 ### Option A: Routenplanung via Webbrowser (bikerouter.de) & Export zu Komoot
-Die beste Methode, um perfekte Routen am PC zu planen und auf dem Smartphone abzufahren:
 1. Öffne [bikerouter.de](https://bikerouter.de).
-2. Klicke oben links auf das Zahnrad-Symbol (Profil anpassen / Custom profile).
-3. Kopiere den gesamten Inhalt der Datei [`escooter-ekfv.brf`](escooter-ekfv.brf) aus diesem Repository in das Textfeld. Klicke auf "Anwenden".
-4. Plane deine Route.
-5. Exportiere die Route als **GPX-Track**.
-6. **Wichtig für Komoot:** Importiere die GPX-Datei in Komoot zwingend als "Aufgezeichnete Tour" oder wähle "Der Originalroute folgen", damit Komoot die eKFV-legale Streckenführung nicht wieder durch seine eigene Fahrrad-Logik überschreibt!
+2. Klicke oben links auf das Zahnrad-Symbol (**Profil anpassen / Custom profile**).
+3. Füge den Inhalt der Profil-Datei in das Textfeld ein und klicke auf **Anwenden**.
+4. Plane deine Route und exportiere sie als **GPX-Datei**.
+5. **Wichtig beim Komoot-Import:** 
+   * Wähle beim Import zwingend **"Der Originalroute folgen"** (bzw. als *Aufgezeichnete Tour* importieren).
+   * Lass Komoot die Route **nicht** automatisch anpassen, da Komoot sonst die eKFV- und Sicherheitsfilter wieder mit seiner eigenen Fahrrad-Logik überschreibt.
 
-### Option B: Offline-Nutzung in OsmAnd (Android/iOS)
-BRouter kann als Offline-Routing-Engine für OsmAnd genutzt werden.
-1. Installiere die [BRouter App](https://brouter.de/brouter/revisions.html) auf deinem Smartphone.
-2. Speichere die Datei `escooter-ekfv.brf` im BRouter-Verzeichnis auf deinem Handy (meist unter `BRouter/segments4/profiles/`).
-3. Wähle das Profil in den BRouter-App-Einstellungen aus und wähle in OsmAnd BRouter als Fahrrad-Navigationsdienst.
+### Option B: Offline-Navigation in OsmAnd
+1. Kopiere die Profildatei in das BRouter-Verzeichnis deines Smartphones (unter `BRouter/segments4/profiles/`).
+2. Wähle in den OsmAnd-Navigationseinstellungen BRouter als Navigationsdienst aus.
+3. *Tipp:* Für Android empfiehlt sich die Version **OsmAnd~** (via F-Droid), da dort alle Offline-Karten und Features ohne In-App-Käufe verfügbar sind.
 
 ---
 
-## 🛠️ Anpassungsmöglichkeiten (Tuning)
+## 🛠️ Tuning & Anpassungen
 
-Die Profildatei ist ausführlich auf Deutsch kommentiert. Du kannst Parameter leicht selbst anpassen:
+Die Profildatei ist strukturiert aufgebaut und kann leicht angepasst werden:
 
-* **Ampeln meiden (Feintuning):** 
-  Suche ganz unten nach `switch highway=traffic_signals 800`. Der Wert `800` regelt die Ampelstrafe. Erhöhe ihn, wenn BRouter dir zu viele Kreuzungen zumutet, oder senke ihn, wenn dir die Schleichwege zu extrem werden.
+* **Gesamtgewicht (`totalMass`):** 
+  Standardmäßig auf `77` kg (Fahrer + Scooter) gesetzt. Passe diesen Wert an dein tatsächliches Setup an, um Ankunftszeit und Beschleunigungskurven weiter zu verfeinern.
+* **Ampel-Malus:** 
+  In der `---context:node`-Sektion regelt `switch highway=traffic_signals 350` die Strafe für Ampeln. Erhöhe den Wert (z. B. auf `500`–`800`), wenn du Ampeln noch weiträumiger meiden willst.
 * **Treppen erlauben (Scooter tragen):** 
-  Setze `assign allow_steps` von `0` auf `1` und entferne im Costfactor-Block die Zeile `switch highway=steps 10000`.
-* **Körpergewicht & Beschleunigung:**
-  Die Massenberechnung steht aktuell auf `assign totalMass = 77`. Passe den Wert einfach an das Gesamtgewicht (du + dein Scooter) an, um die Trägheit und Ankunftszeit absolut exakt auf dein Setup abzustimmen.
+  Setze `assign allow_steps` in der globalen Konfiguration auf `1` und entferne `switch highway=steps 10000` im Costfactor-Block.
 
 ---
 
-## ⚠️ Wichtiger rechtlicher Hinweis (Disclaimer)
+## ⚠️ Rechtlicher Hinweis (Disclaimer)
 
-Dieses Profil navigiert dich bestmöglich nach den Regeln der StVO / eKFV. **Beachte jedoch:** 
-BRouter stützt sich auf die Daten von *OpenStreetMap (OSM)*. Das Profil geht davon aus, dass Fußwege für E-Scooter verboten sind, da das OSM-Tag für das spezielle Zusatzschild *"Elektrokleinstfahrzeuge frei"* in der BRouter-Datenbank noch nicht nativ aufgelöst werden kann. Du wirst daher im Zweifel auf die Straße geleitet, auch wenn der Gehweg in der Realität das Freigabe-Schild hat. 
+Dieses Routing-Profil optimiert Strecken nach den Regeln der deutschen Straßenverkehrsordnung (StVO) und der Elektrokleinstfahrzeuge-Verordnung (eKFV) auf Basis der Daten von OpenStreetMap (OSM). 
 
-**Es gilt immer die echte Beschilderung vor Ort! Du fährst auf eigene Verantwortung.**
+Da die Kartendaten durch Freiwillige gepflegt werden, können Beschilderungen vor Ort abweichen. **Es gilt stets die tatsächliche Beschilderung und Verkehrsführung vor Ort! Die Nutzung erfolgt auf eigene Verantwortung.**
