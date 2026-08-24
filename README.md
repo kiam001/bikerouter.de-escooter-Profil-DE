@@ -29,7 +29,7 @@ Dieses Profil schließt die Lücke zwischen normalem Fahrrad-Routing und Autonav
 ### Option A: Routenplanung via Webbrowser & GPS-Computer / Komoot
 Ideal, um Routen zu planen und als GPX-Track auf externe Geräte oder Navigations-Apps zu übertragen.
 1. Öffne [bikerouter.de](https://bikerouter.de).
-2. Klicke oben links auf das Zahnrad-Symbol (**Profil anpassen / Custom profile**).
+2. Klicke oben rechts auf das Zahnrad-Symbol (**Profil anpassen / Profile**).
 3. Füge den Inhalt der Profil-Datei in das Textfeld ein und klicke auf **Anwenden**.
 4. Plane deine Route und exportiere sie als **GPX-Datei**.
 5. **Wichtig beim Import in Komoot:** 
