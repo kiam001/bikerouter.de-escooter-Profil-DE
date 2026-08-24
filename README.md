@@ -27,7 +27,7 @@ Dieses Profil schließt die Lücke zwischen normalem Fahrrad-Routing und Autonav
 ## 📥 Installation & Nutzung
 
 ### Option A: Routenplanung via Webbrowser & GPS-Computer / Komoot
-Ideal, um Routen zu planen und als GPX-Track auf Geräte wie den iGPSPORT BSC200 oder in Navigations-Apps zu übertragen.
+Ideal, um Routen zu planen und als GPX-Track auf externe Geräte oder Navigations-Apps zu übertragen.
 1. Öffne [bikerouter.de](https://bikerouter.de).
 2. Klicke oben links auf das Zahnrad-Symbol (**Profil anpassen / Custom profile**).
 3. Füge den Inhalt der Profil-Datei in das Textfeld ein und klicke auf **Anwenden**.
@@ -39,7 +39,6 @@ Ideal, um Routen zu planen und als GPX-Track auf Geräte wie den iGPSPORT BSC200
 ### Option B: Offline-Navigation in OsmAnd
 1. Kopiere die Profildatei auf dem Smartphone in das BRouter-Verzeichnis (meist unter `BRouter/segments4/profiles/`).
 2. Wähle in den OsmAnd-Navigationseinstellungen *BRouter* als Navigationsdienst aus.
-3. *Tipp für Android-Nutzer:* Die werbe- und in-app-kauf-freie Vollversion **OsmAnd~** lässt sich hervorragend über den Open-Source-Store [F-Droid](https://f-droid.org/) beziehen.
 
 ---
 
@@ -59,3 +58,7 @@ Die Datei ist leicht lesbar strukturiert und kann einfach an das eigene Setup an
 Dieses Routing-Profil optimiert Strecken bestmöglich nach den aktuellen Regeln der deutschen Straßenverkehrsordnung (StVO) und der Elektrokleinstfahrzeuge-Verordnung (eKFV) auf Basis der Daten von OpenStreetMap (OSM). 
 
 Da diese Kartendaten durch Freiwillige gepflegt werden, können Eintragungen fehlerhaft sein oder Beschilderungen vor Ort abweichen. **Es gilt stets die tatsächliche Beschilderung und Verkehrsführung vor Ort! Die Nutzung des Profils erfolgt auf eigene Verantwortung.**
+
+## 🤖 AI Disclaimer
+
+Dieses Routing-Profil sowie die dazugehörige Dokumentation wurden mit Unterstützung künstlicher Intelligenz (Google Gemini) entwickelt, analysiert und sicherheitsoptimiert. Der Code wurde sorgfältig iteriert und realen Praxistests unterzogen, um das bestmögliche und sicherste eKFV-Routing zu gewährleisten. Dennoch gilt: Algorithmen sind nicht unfehlbar – fahre stets mit gesundem Menschenverstand und achte auf den realen Straßenverkehr.
