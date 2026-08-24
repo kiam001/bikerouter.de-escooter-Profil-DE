@@ -4,7 +4,8 @@
 # Eigenschaften:
 # - 100% Legal: Sperrung von reinen Fußwegen & illegalen "Fahrrad frei"-Gehwegen.
 # - Keine Treppen, keine Fähren.
-# - Direkte Streckenführung: Nutzt Hauptstraßen mit Radweg sehr gerne.
+# - SICHERHEIT: Extrem hohe Strafen für Land-/Bundesstraßen OHNE Radweg.
+# - Direkte Streckenführung: Straßen MIT separatem Radweg werden bevorzugt.
 # - Anti-Werksgelände: Harte Sperre für physische Tore, Schranken & Kundenparkplätze.
 # - Zeit-Modell: Exakte Fahrzeitberechnung (Abriegelung bei 22 km/h)
 # =====================================================================
@@ -113,37 +114,41 @@ assign onewaypenalty =
        )
        else 0.0
 
+# Echter Radweg vorhanden (baulich getrennt oder Schutzstreifen)
 assign hascycleway = not
-  and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
+  and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no|none ) ( or cycleway:right= cycleway:right=no|none )
+
+# Sicherheitsprüfung: Tempo > 50 ohne Radweg meiden
+assign is_fast_road_without_cycleway = and not hascycleway or maxspeed=60|70|80|90|100|120|implicit maxspeed=
 
 assign trafficpenalty0 =
     if highway=primary|primary_link then
     (
-      if      estimated_traffic_class=4 then 0.2
-      else if estimated_traffic_class=5 then 0.4
-      else if estimated_traffic_class=6|7 then 0.6
-      else 0
+      if      estimated_traffic_class=4 then 0.4
+      else if estimated_traffic_class=5 then 0.8
+      else if estimated_traffic_class=6|7 then 1.5
+      else 0.2
     )
     else if highway=secondary|secondary_link then
     (
-      if      estimated_traffic_class=3 then 0.2
-      else if estimated_traffic_class=4 then 0.4
-      else if estimated_traffic_class=5 then 0.6
-      else if estimated_traffic_class=6|7 then 1
-      else 0
+      if      estimated_traffic_class=3 then 0.3
+      else if estimated_traffic_class=4 then 0.6
+      else if estimated_traffic_class=5 then 1.0
+      else if estimated_traffic_class=6|7 then 1.5
+      else 0.1
     )
     else if highway=tertiary|tertiary_link then
     (
       if      estimated_traffic_class=2 then 0.1
       else if estimated_traffic_class=3 then 0.3
-      else if estimated_traffic_class=4 then 0.5
-      else if estimated_traffic_class=5|6|7 then 1
+      else if estimated_traffic_class=4 then 0.6
+      else if estimated_traffic_class=5|6|7 then 1.0
       else 0
     )
     else 0
 
 assign trafficpenalty =
-  if hascycleway then min 0.3 trafficpenalty0
+  if hascycleway then min 0.2 trafficpenalty0
   else trafficpenalty0
 
 assign smoothnesspenalty
@@ -165,8 +170,7 @@ assign costfactor
   switch and highway= not route=ferry  10000
   switch    highway=proposed|abandoned|construction 10000
 
-  # Nur reine Kundenparkplätze hart sperren. "Anlieger frei" (destination) bekommt nur einen kleinen Malus (2.5), 
-  # um Umwege zu sparen, aber trotzdem bevorzugt offene Straßen zu nutzen.
+  # Physische Kundenparkplätze hart sperren
   switch    access=customers 10000
   switch    access=destination 2.5
 
@@ -176,12 +180,17 @@ assign costfactor
   add trafficpenalty
 
   switch    highway=motorway|motorway_link|construction|abandoned    10000
-  switch    highway=trunk|trunk_link                  10
+  switch    highway=trunk|trunk_link                  10000
   
-  # --- HAUPTSTRASSEN (Mit Radweg sehr gerne fahren für direkte Strecken) ---
-  switch    highway=primary|primary_link              switch any_cycleroute 1.3 2.0
-  switch    highway=secondary|secondary_link          switch any_cycleroute 1.15 1.5
-  switch    highway=tertiary|tertiary_link            switch isunpaved UnpavedCostfactor 1.2
+  # --- BUNDES- & LANDSTRASSEN: MIT Radweg TOP, OHNE Radweg SPERREN ---
+  # Primary (Bundesstraße): Mit Radweg 1.2, ohne Radweg 15.0 (massiver Umfahrzwang)
+  switch    highway=primary|primary_link              switch hascycleway 1.2 15.0
+
+  # Secondary (Landstraße 70-100 km/h): Mit Radweg 1.15, ohne Radweg 10.0
+  switch    highway=secondary|secondary_link          switch hascycleway 1.15 10.0
+
+  # Tertiary (Kreisstraße): Mit Radweg 1.1, ohne Radweg 3.5 (oder 8.0 wenn schnell)
+  switch    highway=tertiary|tertiary_link            switch isunpaved UnpavedCostfactor switch hascycleway 1.1 switch is_fast_road_without_cycleway 8.0 3.5
   
   switch    highway=unclassified                      switch isunpaved UnpavedCostfactor 1.1
   switch    highway=residential|living_street         switch isunpaved UnpavedCostfactor 1.1
@@ -271,14 +280,13 @@ assign footaccess
                         0
                         1
 
-# Initiale Kosten berechnen (inklusive AMPELN und TOREN)
 assign initialcost
        add 
-         # 300 = Moderate Strafe für Ampeln. Verhindert absurde Zickzack-Fahrten durch Wohngebiete.
-         max switch highway=traffic_signals 300 0
-             switch crossing=traffic_signals 300 0   
+         # 350 = Moderater Ampel-Malus
+         max switch highway=traffic_signals 350 0
+             switch crossing=traffic_signals 350 0   
        add
-         # 10000 = Extreme Strafe für Tore & Schranken (Sperrt Werksgelände weiterhin physisch ab)
+         # 10000 = Sperrt Werksgelände-Tore
          max switch barrier=gate 10000 0
              switch barrier=lift_gate 10000 0
          switch bikeaccess
