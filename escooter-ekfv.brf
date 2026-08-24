@@ -114,12 +114,12 @@ assign onewaypenalty =
        )
        else 0.0
 
-# Echter Radweg vorhanden (baulich getrennt oder Schutzstreifen) - Syntax korrigiert
+# Echter Radweg vorhanden (baulich getrennt oder Schutzstreifen)
 assign hascycleway = not
   and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
 
-# Sicherheitsprüfung: Tempo > 50 ohne Radweg meiden
-assign is_fast_road_without_cycleway = and not hascycleway or maxspeed=60|70|80|90|100|120|implicit maxspeed=
+# Sicherheitsprüfung: Tempo > 50 ohne Radweg meiden (ohne implicit)
+assign is_fast_road_without_cycleway = and not hascycleway or maxspeed=60|70|80|90|100|120 maxspeed=
 
 assign trafficpenalty0 =
     if highway=primary|primary_link then
