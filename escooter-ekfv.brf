@@ -5,7 +5,8 @@
 # - 100% Legal: Sperrung von reinen Fußwegen & illegalen "Fahrrad frei"-Gehwegen.
 # - Keine Treppen, keine Fähren.
 # - SICHERHEIT: Extrem hohe Strafen für Land-/Bundesstraßen OHNE Radweg.
-# - Direkte Streckenführung: Straßen MIT separatem Radweg werden bevorzugt.
+# - Direkte Streckenführung: Hauptstraßen MIT Radweg sind der Favorit (Faktor 1.0).
+#   Ignoriert Ampeln weitestgehend, um nervige Zickzack-Fahrten im Wohngebiet zu vermeiden.
 # - Anti-Werksgelände: Harte Sperre für physische Tore, Schranken & Kundenparkplätze.
 # - Zeit-Modell: Exakte Fahrzeitberechnung (Abriegelung bei 22 km/h)
 # =====================================================================
@@ -60,8 +61,9 @@ assign ispaved
 
 assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobblestone
 
+# Abbiege-Kosten erhöht (von 90 auf 120), um Zickzack-Kurven in Wohngebieten zu vermeiden
 assign turncost = if junction=roundabout then 0
-                  else 90
+                  else 120
 
 assign initialcost switch route=ferry 10000 0
 
@@ -118,7 +120,7 @@ assign onewaypenalty =
 assign hascycleway = not
   and ( or cycleway= cycleway=no|none ) and ( or cycleway:left= cycleway:left=no ) ( or cycleway:right= cycleway:right=no )
 
-# Sicherheitsprüfung: Tempo > 50 ohne Radweg meiden (ohne implicit)
+# Sicherheitsprüfung: Tempo > 50 ohne Radweg meiden
 assign is_fast_road_without_cycleway = and not hascycleway or maxspeed=60|70|80|90|100|120 maxspeed=
 
 assign trafficpenalty0 =
@@ -147,8 +149,9 @@ assign trafficpenalty0 =
     )
     else 0
 
+# Verkehr ignorieren, wenn ein Radweg vorhanden ist, um auf schnellen Hauptachsen zu bleiben
 assign trafficpenalty =
-  if hascycleway then min 0.2 trafficpenalty0
+  if hascycleway then 0.0
   else trafficpenalty0
 
 assign smoothnesspenalty
@@ -182,19 +185,15 @@ assign costfactor
   switch    highway=motorway|motorway_link|construction|abandoned    10000
   switch    highway=trunk|trunk_link                  10000
   
-  # --- BUNDES- & LANDSTRASSEN: MIT Radweg TOP, OHNE Radweg SPERREN ---
-  # Primary (Bundesstraße): Mit Radweg 1.2, ohne Radweg 15.0 (massiver Umfahrzwang)
-  switch    highway=primary|primary_link              switch hascycleway 1.2 15.0
-
-  # Secondary (Landstraße 70-100 km/h): Mit Radweg 1.15, ohne Radweg 10.0
-  switch    highway=secondary|secondary_link          switch hascycleway 1.15 10.0
-
-  # Tertiary (Kreisstraße): Mit Radweg 1.1, ohne Radweg 3.5 (oder 8.0 wenn schnell)
-  switch    highway=tertiary|tertiary_link            switch isunpaved UnpavedCostfactor switch hascycleway 1.1 switch is_fast_road_without_cycleway 8.0 3.5
+  # --- BUNDES- & LANDSTRASSEN: MIT Radweg BESTNOTE (1.0), OHNE Radweg SPERREN ---
+  switch    highway=primary|primary_link              switch hascycleway 1.0 15.0
+  switch    highway=secondary|secondary_link          switch hascycleway 1.0 10.0
+  switch    highway=tertiary|tertiary_link            switch isunpaved UnpavedCostfactor switch hascycleway 1.0 switch is_fast_road_without_cycleway 8.0 3.5
   
+  # --- INNENSTADT: Direkte Hauptstraßen bevorzugen, Wohngebiete leicht abwerten (1.2) ---
   switch    highway=unclassified                      switch isunpaved UnpavedCostfactor 1.1
-  switch    highway=residential|living_street         switch isunpaved UnpavedCostfactor 1.1
-  switch    highway=service                           switch isunpaved UnpavedCostfactor 1.1
+  switch    highway=residential|living_street         switch isunpaved UnpavedCostfactor 1.2
+  switch    highway=service                           switch isunpaved UnpavedCostfactor 1.2
   
   switch    highway=pedestrian                        switch ispaved 10 UnpavedCostfactor
   
@@ -282,9 +281,9 @@ assign footaccess
 
 assign initialcost
        add 
-         # 350 = Moderater Ampel-Malus
-         max switch highway=traffic_signals 350 0
-             switch crossing=traffic_signals 350 0   
+         # 50 = Sehr geringer Ampel-Malus (vorher 350!). Lässt dich flüssig auf der Hauptstraße bleiben.
+         max switch highway=traffic_signals 50 0
+             switch crossing=traffic_signals 50 0   
        add
          # 10000 = Sperrt Werksgelände-Tore
          max switch barrier=gate 10000 0
