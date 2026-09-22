@@ -1,4 +1,4 @@
-# 🛴 BRouter E-Scooter Profil (eKFV-konform & sicherheitsoptimiert)
+# 🛴 BRouter E-Scooter Profil (eKFV-konform, City-Flow & Sicherheitsoptimiert)
 
 Ein praxiserprobtes, maßgeschneidertes Routing-Profil für [BRouter](https://brouter.de/) und [bikerouter.de](https://bikerouter.de/), speziell entwickelt für Elektrokleinstfahrzeuge (E-Scooter) in Deutschland nach den Vorgaben der **eKFV** (Elektrokleinstfahrzeuge-Verordnung).
 
@@ -12,29 +12,29 @@ Dieses Profil schließt die Lücke zwischen normalem Fahrrad-Routing und Autonav
   Reine Fußwege und Fußgängerzonen sind gesperrt. Gehwege mit dem bloßen Zusatzschild *"Radfahrer frei"* (`bicycle=yes`) werden strikt blockiert, da E-Scooter hier rechtlich nichts verloren haben. Geroutet wird ausschließlich über echte Radwege (`bicycle=designated`), Straßen und freigegebene Wege.
 * **🛡️ Schutz vor schnellen Landstraßen:** 
   Bundes- (`primary`), Land- (`secondary`) und Kreisstraßen (`tertiary`) ohne baulichen Radweg oder Schutzstreifen werden massiv abgewertet und umfahren. Das System navigiert dich nicht in lebensgefährlichen Mischverkehr bei 70 oder 100 km/h. Besitzt eine Hauptstraße jedoch einen separaten Radweg, wird dieser für direkte, schnelle Linien bevorzugt.
-* **🚧 Keine Sackgassen an Werksgeländen:** 
-  Wege über private Kundenparkplätze sowie physische Tore (`barrier=gate`) und Schranken (`barrier=lift_gate`) sind hart gesperrt. Das verhindert effektiv, dass man nach Feierabend plötzlich vor verschlossenen Toren auf Industrie- oder Privatgeländen strandet.
-* **🚦 Ausbalancierte Ampel-Logik:** 
-  Ampeln und Bettelampeln werden moderat bestraft. Nervige Stop-and-Go-Kreuzungen werden sinnvoll umfahren, ohne dass die Engine in absurde Zickzack-Fahrten durch engste Wohngebiete verfällt.
+* **🏙️ City-Flow-Modus:** 
+  Um absurde Zickzack-Fahrten in Wohngebieten zu vermeiden, priorisiert das Profil flüssige Hauptachsen mit Radwegen und bewertet Ampeln nur mit sehr geringen Strafpunkten. Dadurch bleibst du länger auf direkten, gut ausgebauten Strecken.
+* **🚧 Harte Sperren für Werksgelände:** 
+  Das Profil erkennt Sackgassen und Hindernisse, bevor du davorstehst. Wege über Kundenparkplätze, physische Tore (`barrier=gate`), Schranken (`barrier=lift_gate`) und Betonblockaden (`barrier=block`) sind mit dem maximalen Strafwert blockiert.
+* **🎛️ Bikerouter.de UI-Integration:**
+  Wichtige Einstellungen (wie das Erlauben von Treppen/Fähren oder das Format der Abbiegehinweise für externe GPS-Computer) können direkt in der Web-Oberfläche unter "Profil personalisieren" eingestellt werden, ohne den Code anpassen zu müssen.
 * **⏱️ Hochpräzise Echtzeit-Berechnung (ETA):** 
-  Das Physikmodell ist exakt auf die gesetzliche Maximalunterstützung von **22 km/h** und das reale Systemgewicht kalibriert. 
-  *Praxistest:* Auf einer urbanen Pendelstrecke von >41 km lag die reine Fahrzeit bei 1h 58m, was einer durchschnittlichen Bewegungsgeschwindigkeit von 21,1 km/h entspricht. Die errechneten Ankunftszeiten (inklusive Ampelstopps) stimmen auf die Minute genau.
-* **🚫 Komplett barrierefrei:** 
-  Treppen (`steps`) und Fähren (`ferry`) sind vollständig ausgeschlossen.
+  Das Physikmodell ist exakt auf die gesetzliche Maximalunterstützung von **22 km/h** und das reale Systemgewicht kalibriert. Die errechneten Ankunftszeiten stimmen auf die Minute genau.
 
 ---
 
 ## 📥 Installation & Nutzung
 
 ### Option A: Routenplanung via Webbrowser & GPS-Computer / Komoot
-Ideal, um Routen zu planen und als GPX-Track auf externe Geräte oder Navigations-Apps zu übertragen.
+Ideal, um Routen zu planen und als GPX-Track auf externe Geräte (z.B. iGPSPORT BSC200) oder in Navigations-Apps zu übertragen.
 1. Öffne [bikerouter.de](https://bikerouter.de).
-2. Klicke oben rechts auf das Zahnrad-Symbol (**Profil anpassen / Profile**).
+2. Klicke oben links auf das Zahnrad-Symbol (**Profil anpassen / Custom profile**).
 3. Füge den Inhalt der Profil-Datei in das Textfeld ein und klicke auf **Anwenden**.
-4. Plane deine Route und exportiere sie als **GPX-Datei**.
-5. **Wichtig beim Import in Komoot:** 
+4. Im Reiter **Optionen** kannst du die Navigation minimal anpassen (z.B. das Format der Turn-Instructions für deinen GPS-Computer).
+5. Plane deine Route und exportiere sie als **GPX-Datei**.
+6. **Wichtig beim Import in Komoot:** 
    * Wähle beim Import zwingend **"Der Originalroute folgen"** (bzw. als *Aufgezeichnete Tour* importieren).
-   * Lass die App die Route **nicht** anpassen! Andernfalls überschreibt Komoot die eKFV- und Sicherheitsfilter wieder mit der eigenen, für Scooter ungeeigneten Fahrrad-Logik.
+   * Lass die App die Route **nicht** anpassen! Andernfalls überschreibt Komoot die eKFV- und Sicherheitsfilter wieder mit der eigenen Fahrrad-Logik.
 
 ### Option B: Offline-Navigation in OsmAnd
 1. Kopiere die Profildatei auf dem Smartphone in das BRouter-Verzeichnis (meist unter `BRouter/segments4/profiles/`).
@@ -48,8 +48,8 @@ Die Datei ist leicht lesbar strukturiert und kann einfach an das eigene Setup an
 
 * **Gesamtgewicht (`totalMass`):** 
   Standardmäßig auf `77` kg gesetzt (Fahrer + Scooter). Passe den Wert an dein tatsächliches Systemgewicht an, um die Rollwiderstands- und Steigungsberechnung noch weiter zu perfektionieren.
-* **Treppen erlauben (Scooter tragen):** 
-  Setze `assign allow_steps` in der globalen Konfiguration von `0` auf `1` und entferne `switch highway=steps 10000` aus dem Costfactor-Block, falls du leichte Scooter für Abkürzungen tragen möchtest.
+* **Baustellen umgehen:**
+  Temporäre Baustellen sind in OSM oft nicht korrekt hinterlegt. Nutze auf bikerouter.de das Werkzeug **Sperrgebiete zeichnen** (Kreis-Symbol mit Linie), um bekannte Baustellen bei der Routenplanung manuell zu blockieren.
 
 ---
 
