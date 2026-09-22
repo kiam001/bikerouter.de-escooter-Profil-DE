@@ -3,33 +3,33 @@
 # 
 # Eigenschaften:
 # - 100% Legal: Sperrung von reinen Fußwegen & illegalen "Fahrrad frei"-Gehwegen.
-# - Keine Treppen, keine Fähren.
+# - Keine Treppen, keine Fähren (über UI optional zuschaltbar).
 # - SICHERHEIT: Extrem hohe Strafen für Land-/Bundesstraßen OHNE Radweg.
 # - Direkte Streckenführung: Hauptstraßen MIT Radweg sind der Favorit (Faktor 1.0).
 #   Ignoriert Ampeln weitestgehend, um nervige Zickzack-Fahrten im Wohngebiet zu vermeiden.
-# - Anti-Werksgelände: Harte Sperre für physische Tore, Schranken & Kundenparkplätze.
+# - Anti-Werksgelände: Harte Sperre für physische Tore, Betonblöcke & Kundenparkplätze.
 # - Zeit-Modell: Exakte Fahrzeitberechnung (Abriegelung bei 22 km/h)
 # =====================================================================
 
 ---context:global
 
+# --- UI-KONFIGURATION FÜR BIKEROUTER.DE ---
+assign allow_steps          = 0     # %allow_steps% | Treppen erlauben (Roller muss getragen werden) | boolean
+assign allow_ferries        = 0     # %allow_ferries% | Fährüberfahrten erlauben | boolean
+assign processUnusedTags    = true  # %processUnusedTags% | Unbenutzte Tags im Daten-Tab anzeigen | boolean
+assign turnInstructionMode  = 1     # %turnInstructionMode% | Modus für Abbiegehinweise (z.B. für iGPSPORT/Garmin) | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=oruxmaps-style]
+assign turnInstructionCatchingRange = 40 # %turnInstructionCatchingRange% | Distanz (m) zum Zusammenfassen von Abbiegehinweisen | number
+assign turnInstructionRoundabouts   = true # %turnInstructionRoundabouts% | Spezielle Abbiegehinweise für Kreisverkehre generieren | boolean
+
 assign   consider_elevation   1   
-assign   allow_steps          0   
-assign   allow_ferries        0   
 assign   ignore_cycleroutes   0   
 assign   stick_to_cycleroutes 0   
 assign   avoid_unsafe         0   
 assign   UnpavedCostfactor    25.0 
 assign   PavingUnsureCostfactor 6.0 
 
-assign processUnusedTags = true 
 assign ferries_allowed   = false  
-
-assign turnInstructionMode          = 1     
-assign turnInstructionCatchingRange = 40    
-assign turnInstructionRoundabouts   = true  
-
-assign   validForBikes        1
+assign validForBikes     = 1
 
 # --- E-SCOOTER PHYSIK & EXAKTE FAHRZEIT ---
 assign totalMass  = 77      
@@ -61,11 +61,10 @@ assign ispaved
 
 assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobblestone
 
-# Abbiege-Kosten erhöht (von 90 auf 120), um Zickzack-Kurven in Wohngebieten zu vermeiden
 assign turncost = if junction=roundabout then 0
                   else 120
 
-assign initialcost switch route=ferry 10000 0
+assign initialcost switch route=ferry switch allow_ferries 0 10000 0
 
 assign bikeaccess =
        if any_cycleroute then true
@@ -197,8 +196,8 @@ assign costfactor
   
   switch    highway=pedestrian                        switch ispaved 10 UnpavedCostfactor
   
-  switch    highway=steps                             10000
-  switch    route=ferry                               10000
+  switch    highway=steps                             switch allow_steps 10 10000
+  switch    route=ferry                               switch allow_ferries 5.67 10000
   
   switch    highway=bridleway                         UnpavedCostfactor
   switch    highway=cycleway                          switch ispaved 1.0 UnpavedCostfactor
@@ -281,13 +280,14 @@ assign footaccess
 
 assign initialcost
        add 
-         # 50 = Sehr geringer Ampel-Malus (vorher 350!). Lässt dich flüssig auf der Hauptstraße bleiben.
+         # 50 = Sehr geringer Ampel-Malus. Lässt dich flüssig auf der Hauptstraße bleiben.
          max switch highway=traffic_signals 50 0
              switch crossing=traffic_signals 50 0   
        add
-         # 10000 = Sperrt Werksgelände-Tore
+         # 10000 = Sperrt Werksgelände-Tore, Schranken und Betonblockaden hart ab
          max switch barrier=gate 10000 0
-             switch barrier=lift_gate 10000 0
+         max switch barrier=lift_gate 10000 0
+             switch barrier=block 10000 0
          switch bikeaccess
                 0
                 switch footaccess
